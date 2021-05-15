@@ -1,0 +1,20 @@
+<html>
+<head>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="arcanoid.js"></script>
+    <title>Arcanoid</title>
+</head>
+<body onload="startGame()">
+    <div class="control-buttons">
+        <button type="button" class="left" onmousedown="push('ArrowUp')" onmouseup="release('ArrowUp')">Left</button>
+        <button type="button" class="pause" onclick="game.switchPaused()">Pause</button>
+        <button type="button" class="right" onmousedown="push('ArrowDown')" onmouseup="release('ArrowDown')">Right</button>
+    </div>
+    <div id="game"></div>
+    <div class="control-buttons">
+        <button type="button" class="left" onmousedown="push('ArrowLeft')" onmouseup="release('ArrowLeft')">Left</button>
+        <button type="button" class="pause" onclick="game.switchPaused()">Pause</button>
+        <button type="button" class="right" onmousedown="push('ArrowRight')" onmouseup="release('ArrowRight')">Right</button>
+    </div>
+</body>
+</html>

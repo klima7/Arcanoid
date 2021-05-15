@@ -1,0 +1,24 @@
+canvas {
+    border:1px solid #d3d3d3;
+    background-color: #f1f1f1;
+    margin: auto;
+}
+
+#game {
+    text-align: center;
+}
+
+.control-buttons {
+    text-align: center;
+    margin: 10px;
+}
+
+.left, .right {
+    width: 350px;
+    height: 40px;
+}
+
+.pause {
+    width: 100px;
+    height: 40px;
+}
