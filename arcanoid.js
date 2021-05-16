@@ -80,27 +80,32 @@ class Ball extends Collideable {
 
     update(millis) {
         this.x += this.vx * millis / 1000;
-        // for(let platform of this.game.platforms) {
-        //     if(this.collide(platform)) {
-        //         this.vx *= -1;
-        //         if(this.vx > 0) this.x = platform.x - this.width - 1
-        //         else this.x = platform.x + platform.width + 1;
-        //         break;
-        //     }
-        // }
+        for(let platform of this.game.platforms) {
+            if(this.collide(platform)) {
+                if(this.vx > 0) this.x = platform.x - this.width;
+                else this.x = platform.x + platform.width;
+                this.vx *= -1;
+                break;
+            }
+        }
 
 
         this.y += this.vy * millis / 1000;
         for(let platform of this.game.platforms) {
             if(this.collide(platform)) {
+                if(this.vy > 0) this.y = platform.y - this.height;
+                else this.y = platform.y + platform.height;
                 this.vy *= -1;
-                if(this.vy > 0) this.y = platform.y + platform.height - 1
-                else this.y = platform.y - this.height + 1;
                 break;
             }
         }
 
-        if(this.x < 0 || this.x > this.game.screen.canvas.width - this.width) this.vx *= -1;
+        if(this.x > this.game.screen.canvas.width - this.width) this.vx *= -1;
+        if(this.y < 0) this.vy *= -1;
+        if(this.x < -this.width || this.y > this.game.screen.canvas.height) {
+            const index = this.game.balls.indexOf(this);
+            this.game.balls.splice(index, 1)
+        }
     }
 
     draw(ctx) {
@@ -118,20 +123,21 @@ class Platform extends Collideable {
     static WIDTH = 100;
     static COLOR = 'green';
 
-    constructor(game, y, leftKey, rightKey) {
-        super((game.screen.canvas.width - Platform.WIDTH) / 2, y - Platform.THICKNESS / 2, Platform.WIDTH, Platform.THICKNESS)
+    constructor(game, x, y, orientation, firstKey, secondKey) {
+        if(orientation=='horizontal') super(x-Platform.WIDTH/2, y-Platform.THICKNESS/2, Platform.WIDTH, Platform.THICKNESS)
+        else super(x-Platform.THICKNESS/2, y-Platform.WIDTH/2, Platform.THICKNESS, Platform.WIDTH)
         this.game = game;
-        this.leftKey = leftKey;
-        this.rightKey = rightKey;
-        
-        this.vx = 0;
-        this.vy = 0;
+        this.orientation = orientation;
+        this.firstKey = firstKey;
+        this.secondKey = secondKey;
     }
 
     update(millis) {
         let keyboard = this.game.keyboard;
-        if(keyboard.isPressed(this.leftKey)) this.moveLeft(millis);
-        if(keyboard.isPressed(this.rightKey)) this.moveRight(millis);
+        if(this.orientation == 'horizontal' && keyboard.isPressed(this.firstKey)) this.moveLeft(millis);
+        if(this.orientation == 'horizontal' && keyboard.isPressed(this.secondKey)) this.moveRight(millis);
+        if(this.orientation == 'vertical' && keyboard.isPressed(this.firstKey)) this.moveDown(millis);
+        if(this.orientation == 'vertical' && keyboard.isPressed(this.secondKey)) this.moveUp(millis);
     }
 
     moveLeft(millis) {
@@ -141,6 +147,7 @@ class Platform extends Collideable {
         for(let ball of this.game.balls) {
             if(this.collide(ball)) {
                 ball.x = this.x - ball.width;
+                ball.vx = -Platform.SPEED;
             }
         }
     }
@@ -152,15 +159,41 @@ class Platform extends Collideable {
         for(let ball of this.game.balls) {
             if(this.collide(ball)) {
                 ball.x = this.x + this.width;
+                ball.vx = Platform.SPEED;
+            }
+        }
+    }
+
+    moveUp(millis) {
+        this.y -= Platform.SPEED * millis / 1000;
+        if(this.y < 0) this.y = 0;
+
+        for(let ball of this.game.balls) {
+            if(this.collide(ball)) {
+                ball.y = this.y - ball.height;
+                ball.vy = -Platform.SPEED;
+            }
+        }
+    }
+
+    moveDown(millis) {
+        this.y += Platform.SPEED * millis / 1000;
+        if(this.y + Platform.WIDTH > this.game.screen.canvas.height) this.y = this.game.screen.canvas.height - Platform.WIDTH;
+
+        for(let ball of this.game.balls) {
+            if(this.collide(ball)) {
+                ball.y = this.y + this.height;
+                ball.vy = Platform.SPEED;
             }
         }
     }
 
     draw(ctx) {
         ctx.fillStyle = Platform.COLOR;
-        ctx.fillRect(this.x, this.y, Platform.WIDTH, Platform.THICKNESS);
+        ctx.fillRect(this.x, this.y, this.width, this.height);
     }
 }
+
 
 class Game {
 
@@ -169,13 +202,7 @@ class Game {
         this.keyboard = new Keyboard();
         this.paused = true;
 
-        this.balls = []
-        this.platforms = []
-
-        this.balls.push(new Ball(this, 400, 300, 100, 0))
-        this.balls.push(new Ball(this, 500, 300, 100, Math.PI/3))
-        this.platforms.push(new Platform(this, 580, "ArrowLeft", "ArrowRight"));
-        this.platforms.push(new Platform(this, 20, "ArrowUp", "ArrowDown"));
+        this.initLevel();
     }
 
     loop(millis) {
@@ -187,6 +214,8 @@ class Game {
     update(millis) {
         this.balls.forEach(ball => ball.update(millis));
         this.platforms.forEach(platform => platform.update(millis));
+
+        if(this.balls.length == 0) this.initLevel();
     }
 
     draw(ctx) {
@@ -218,4 +247,16 @@ class Game {
         else this.stop();
     }
 
+    reset() {
+        this.balls = [];
+        this.platforms = [];
+    }
+
+    initLevel() {
+        this.reset();
+        this.balls.push(new Ball(this, 400, 300, 100, 0))
+        this.balls.push(new Ball(this, 500, 300, 100, Math.PI/3))
+        this.platforms.push(new Platform(this, 400, 580, "horizontal", "ArrowLeft", "ArrowRight"));
+        this.platforms.push(new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp"));
+    }
 }
