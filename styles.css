@@ -1,7 +1,13 @@
+body {
+    background-color: aqua;
+}
+
 canvas {
     border:1px solid #d3d3d3;
     background-color: #f1f1f1;
     margin: auto;
+    border: solid 4px green;
+    border-radius: 10px;
 }
 
 #game {
@@ -16,4 +22,11 @@ canvas {
 .button {
     width: 70px;
     height: 40px;
+    border: solid 4px green;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.button:hover {
+    background-color: greenyellow;
 }
