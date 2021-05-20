@@ -17,6 +17,8 @@ class Screen {
 
     constructor(width, height) {
         this.canvas = document.createElement("canvas");
+        this.width = width;
+        this.height = height;
         let gameDiv = document.getElementById("game");
         gameDiv.appendChild(this.canvas);
         this.canvas.width = width;
@@ -25,7 +27,7 @@ class Screen {
     }
 
     clear() {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.width, this.height);
     }
 }
 
@@ -100,9 +102,9 @@ class Ball extends Collideable {
             }
         }
 
-        if(this.x > this.game.screen.canvas.width - this.width) this.vx *= -1;
+        if(this.x > this.game.screen.width - this.width) this.vx *= -1;
         if(this.y < 0) this.vy *= -1;
-        if(this.x < -this.width || this.y > this.game.screen.canvas.height) {
+        if(this.x < -this.width || this.y > this.game.screen.height) {
             const index = this.game.balls.indexOf(this);
             this.game.balls.splice(index, 1)
         }
@@ -154,7 +156,7 @@ class Platform extends Collideable {
 
     moveRight(millis) {
         this.x += Platform.SPEED * millis / 1000;
-        if(this.x + Platform.WIDTH > this.game.screen.canvas.width) this.x = this.game.screen.canvas.width - Platform.WIDTH;
+        if(this.x + Platform.WIDTH > this.game.screen.width) this.x = this.game.screen.width - Platform.WIDTH;
 
         for(let ball of this.game.balls) {
             if(this.collide(ball)) {
@@ -178,7 +180,7 @@ class Platform extends Collideable {
 
     moveDown(millis) {
         this.y += Platform.SPEED * millis / 1000;
-        if(this.y + Platform.WIDTH > this.game.screen.canvas.height) this.y = this.game.screen.canvas.height - Platform.WIDTH;
+        if(this.y + Platform.WIDTH > this.game.screen.height) this.y = this.game.screen.height - Platform.WIDTH;
 
         for(let ball of this.game.balls) {
             if(this.collide(ball)) {
@@ -254,8 +256,9 @@ class Game {
 
     initLevel() {
         this.reset();
-        this.balls.push(new Ball(this, 400, 300, 100, 0))
-        this.balls.push(new Ball(this, 500, 300, 100, Math.PI/3))
+        this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6))
+        this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3))
+        this.balls.push(new Ball(this, 500, 400, 200, -Math.PI))
         this.platforms.push(new Platform(this, 400, 580, "horizontal", "ArrowLeft", "ArrowRight"));
         this.platforms.push(new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp"));
     }
