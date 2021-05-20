@@ -81,24 +81,32 @@ class Ball extends Collideable {
     }
 
     update(millis) {
+        let collideables = this.game.platforms.concat(this.game.blocks)
+
         this.x += this.vx * millis / 1000;
-        for(let platform of this.game.platforms) {
-            if(this.collide(platform)) {
-                if(this.vx > 0) this.x = platform.x - this.width;
-                else this.x = platform.x + platform.width;
+        for(let collideable of collideables) {
+            if(this.collide(collideable)) {
+                if(this.vx > 0) this.x = collideable.x - this.width;
+                else this.x = collideable.x + collideable.width;
                 this.vx *= -1;
-                break;
+                if(collideable instanceof Block) {
+                    const index = this.game.blocks.indexOf(collideable);
+                    this.game.blocks.splice(index, 1)
+                }
             }
         }
 
 
         this.y += this.vy * millis / 1000;
-        for(let platform of this.game.platforms) {
-            if(this.collide(platform)) {
-                if(this.vy > 0) this.y = platform.y - this.height;
-                else this.y = platform.y + platform.height;
+        for(let collideable of collideables) {
+            if(this.collide(collideable)) {
+                if(this.vy > 0) this.y = collideable.y - this.height;
+                else this.y = collideable.y + collideable.height;
                 this.vy *= -1;
-                break;
+                if(collideable instanceof Block) {
+                    const index = this.game.blocks.indexOf(collideable);
+                    this.game.blocks.splice(index, 1)
+                }
             }
         }
 
@@ -197,6 +205,23 @@ class Platform extends Collideable {
 }
 
 
+class Block extends Collideable {
+    static WIDTH = 40
+    static HEIGHT = 20
+    static COLOR = 'blue'
+
+    constructor(game, x, y) {
+        super(x, y, Block.WIDTH, Block.HEIGHT)
+        this.game = game;
+    }
+
+    draw(ctx) {
+        ctx.fillStyle = Block.COLOR;
+        ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+}
+
+
 class Game {
 
     constructor() {
@@ -223,6 +248,7 @@ class Game {
     draw(ctx) {
         this.balls.forEach(ball => ball.draw(ctx));
         this.platforms.forEach(platform => platform.draw(ctx));
+        this.blocks.forEach(block => block.draw(ctx));
     }
 
     start(millis) {
@@ -252,14 +278,26 @@ class Game {
     reset() {
         this.balls = [];
         this.platforms = [];
+        this.blocks = [];
     }
 
     initLevel() {
         this.reset();
-        this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6))
-        this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3))
-        this.balls.push(new Ball(this, 500, 400, 200, -Math.PI))
+        this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6));
+        this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3));
         this.platforms.push(new Platform(this, 400, 580, "horizontal", "ArrowLeft", "ArrowRight"));
         this.platforms.push(new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp"));
+        this.addBlocks();
+    }
+
+    addBlocks() {
+        let SPACE_BETWEEN = 5
+
+        for(let i=0; i<5; i++) {
+            for(let j=0; j<16; j++) {
+                let block = new Block(this, 50+j*(Block.WIDTH+SPACE_BETWEEN), 50+i*(Block.HEIGHT+SPACE_BETWEEN))
+                this.blocks.push(block);
+            }
+        }
     }
 }
