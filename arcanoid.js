@@ -228,8 +228,8 @@ class Game {
         this.keyboard = new Keyboard();
         this.paused = true;
         this.verticalPlatform = true;
-        this.score = 0;
-
+        
+        this.reset();
         this.initLevel();
     }
 
@@ -251,12 +251,23 @@ class Game {
         this.platforms.forEach(platform => platform.draw(ctx));
         this.blocks.forEach(block => block.draw(ctx));
         this.drawScore(ctx);
+        this.drawTime(ctx);
     }
 
     drawScore(ctx) {
         ctx.font = "20px Comic Sans MS";
         ctx.fillStyle = "red";
         ctx.fillText("Score: " + this.score, 10, 25);
+    }
+
+    drawTime(ctx) {
+        const elapsedSeconds = (new Date().getTime() - this.startTime.getTime()) / 1000;
+        const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+        const seconds = String(Math.floor(elapsedSeconds % 60)).padStart(2, '0');
+        const text = "Time: " + minutes + ":" + seconds;
+        ctx.font = "20px Comic Sans MS";
+        ctx.fillStyle = "red";
+        ctx.fillText(text, this.screen.width-120, 25);
     }
 
     start(millis) {
@@ -288,6 +299,7 @@ class Game {
         this.platforms = [];
         this.blocks = [];
         this.score = 0;
+        this.startTime = new Date();
     }
 
     initLevel() {
