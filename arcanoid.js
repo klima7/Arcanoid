@@ -80,12 +80,14 @@ class Collideable {
 
 class Ball extends Collideable {
 
+    static BOUNCE_FACTOR = 100;
     static RADIUS = 5;
     static COLOR = 'red';
 
     constructor(game, x, y, speed, angle) {
         super(x-Ball.RADIUS, y-Ball.RADIUS, 2*Ball.RADIUS, 2*Ball.RADIUS)
         this.game = game;
+        this.speed = speed;
         this.vx = speed * Math.sin(angle);
         this.vy = speed * Math.cos(angle);
     }
@@ -103,6 +105,9 @@ class Ball extends Collideable {
                 this.vx *= -1;
                 if(collideable instanceof Block)
                     this.game.hitBlock(collideable);
+
+                let shift = ((this.y + this.height/2) - (collideable.y + collideable.height/2)) / (collideable.height/2);
+                this.setVelocityY(shift*Ball.BOUNCE_FACTOR);
             }
         }
 
@@ -115,6 +120,9 @@ class Ball extends Collideable {
                 this.vy *= -1;
                 if(collideable instanceof Block)
                     this.game.hitBlock(collideable);
+
+                let shift = ((this.x + this.width/2) - (collideable.x + collideable.width/2)) / (collideable.width/2);
+                this.setVelocityX(shift*Ball.BOUNCE_FACTOR);
             }
         }
 
@@ -126,6 +134,16 @@ class Ball extends Collideable {
             const index = this.game.balls.indexOf(this);
             this.game.balls.splice(index, 1)
         }
+    }
+
+    setVelocityX(vx) {
+        this.vx = vx;
+        this.vy = Math.sqrt(this.speed*this.speed - vx*vx) * Math.sign(this.vy);
+    }
+
+    setVelocityY(vy) {
+        this.vy = vy;
+        this.vx = Math.sqrt(this.speed*this.speed - vy*vy) * Math.sign(this.vx);
     }
 
     draw(ctx) {
@@ -369,7 +387,6 @@ class Game {
         this.setPauseButtonText("Pause");
         this.paused = false;
         this.ranking.clearTable();
-        this.ranking.insertTableRow('position', 'date', 'score', 'time');
     }
 
     stop() {
