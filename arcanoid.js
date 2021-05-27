@@ -277,11 +277,33 @@ class Block extends Collideable {
         super(x, y, Block.WIDTH, Block.HEIGHT)
         this.game = game;
         this.points = Block.POINTS;
+        this.color = Block.COLOR;
+        this.boost = null;
+
+        let rand = Math.floor(Math.random() * 10);
+        if(rand < 2) {
+            this.color = StickBoost.COLOR;
+            this.boost = new StickBoost(this.game, this.x+this.width/2, this.y+this.height/2);
+        }
+        else if(rand < 4) {
+            this.color = BallBoost.COLOR;
+            this.boost = new BallBoost(this.game, this.x+this.width/2, this.y+this.height/2);
+        }
+        else if(rand < 5) {
+            this.color = SpeedBoost.COLOR;
+            this.boost = new SpeedBoost(this.game, this.x+this.width/2, this.y+this.height/2);
+        }
     }
 
     draw(ctx) {
-        ctx.fillStyle = Block.COLOR;
+        ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+    }
+
+    hit() {
+        if(this.boost != null) {
+            this.game.boosts.push(this.boost);
+        }
     }
 }
 
@@ -417,6 +439,37 @@ class StickBoost extends Boost {
     }
 }
 
+class BallBoost extends Boost {
+
+    static COLOR = 'aqua';
+
+    constructor(game, x, y) {
+        super(game, x, y, BallBoost.COLOR, 'Ball');
+    }
+
+    action() {
+        this.game.balls.push(new Ball(this.game, 200, 200, 150, Math.PI/3));
+    }
+}
+
+class SpeedBoost extends Boost {
+
+    static COLOR = 'red';
+    static FACTOR = 2;
+
+    constructor(game, x, y) {
+        super(game, x, y, SpeedBoost.COLOR, 'Speed');
+    }
+
+    action() {
+        let index = Math.floor(Math.random() * this.game.balls.length);
+        let ball = this.game.balls[index];
+        ball.vx *= SpeedBoost.FACTOR;
+        ball.vy *= SpeedBoost.FACTOR;
+        ball.speed = Math.sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
+    }
+}
+
 
 class Game {
 
@@ -511,7 +564,7 @@ class Game {
     reset() {
         this.balls = [];
         this.blocks = [];
-        this.boosts = [new StickBoost(this, 200, 200)];
+        this.boosts = [];
         this.score = 0;
         this.pendingStick = 0;
         this.verticalPlatform = new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp")
@@ -539,7 +592,7 @@ class Game {
 
     getNick() {
         var nick = document.getElementById("nick-field").value;
-        if(nick.length == 0) nick="Unknown";
+        if(nick.length == 0) nick="You";
         return nick;
     }
 
@@ -555,6 +608,7 @@ class Game {
     }
 
     hitBlock(block) {
+        block.hit();
         const index = this.blocks.indexOf(block);
         this.blocks.splice(index, 1);
         this.score += block.points;
