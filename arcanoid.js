@@ -1,5 +1,7 @@
 let game = null;
 
+disableScrollingWithKeys();
+
 function startGame() {
     game = new Game();
     game.start(20);
@@ -11,6 +13,14 @@ function push(key) {
 
 function release(key) {
     game.keyboard.keys[key] = false;
+}
+
+function disableScrollingWithKeys() {
+    window.addEventListener("keydown", function(e) {
+        if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+            e.preventDefault();
+        }
+    }, false);
 }
 
 class Screen {
