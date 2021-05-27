@@ -1,5 +1,6 @@
 body {
     background-color: aqua;
+    text-align: center;
 }
 
 canvas {
@@ -18,12 +19,7 @@ input {
 }
 
 #nick {
-    text-align: center;
     margin-bottom: 20px;
-}
-
-#game {
-    text-align: center;
 }
 
 #score-panel {
@@ -54,7 +50,6 @@ input {
 }
 
 #buttons {
-    text-align: center;
     margin: auto;
     margin-top: 20px;
 }
@@ -82,4 +77,18 @@ input {
 
 .button.vertical.selected {
     background-color: lightcoral;
+}
+
+.button.clear {
+    margin-top: 20px;
+    border-color: red;
+    background-color: lightcoral;
+    width: 200px;
+        margin-left: auto;
+    margin-right: auto;
+}
+
+.button.clear:hover {
+    border-color: red;
+    background-color: red;
 }

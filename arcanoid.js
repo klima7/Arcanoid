@@ -278,6 +278,13 @@ class Ranking {
         this.table.replaceChild(newBody, oldBody);
     }
 
+    clearDatabase() {
+        let transactoin = this.db.transaction(["Ranking"], "readwrite");
+        let ranking = transactoin.objectStore("Ranking");
+        let request = ranking.clear();
+        request.onsuccess = () => this.refreshTable();
+    }
+
     refreshTable() {
         let transactoin = this.db.transaction(["Ranking"], "readwrite");
         let ranking = transactoin.objectStore("Ranking");
@@ -290,11 +297,7 @@ class Ranking {
         let request = this.db.transaction(["Ranking"], "readwrite")
         .objectStore("Ranking")
         .put(record);
-        
-        request.onsuccess = () => {
-            // alert("Record added");
-            this.refreshTable();
-        };
+        request.onsuccess = () => this.refreshTable();
     }
 }
 
