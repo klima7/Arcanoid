@@ -225,11 +225,86 @@ class Block extends Collideable {
 }
 
 
+class Ranking {
+    
+    constructor(game, x, y) {
+        this.table = document.getElementById("score-table");
+        this.initDB();
+    }
+
+    initDB() {
+        let openRequest = indexedDB.open('Arcanoid', 1);
+
+        openRequest.onsuccess = () => {
+            this.db = openRequest.result;
+            this.refreshTable();
+        };
+        
+        openRequest.onupgradeneeded = () => {
+            this.db = openRequest.result;
+            this.db.createObjectStore('Ranking', {autoIncrement: true});
+        };
+
+        openRequest.onerror = () => console.log("Error", openRequest.error);
+    }
+
+    setTableContent(scores) {
+        this.clearTable();
+        scores.sort((a, b) => b.score - a.score);
+        for(let pos=0; pos<scores.length; pos++)
+            this.insertTableRow(pos+1, scores[pos]);
+    }
+
+    insertTableRow(position, score) {
+        let body = this.table.getElementsByTagName('tbody')[0];
+        let row = body.insertRow(-1);
+
+        let positionCell = row.insertCell();
+        let nickCell = row.insertCell();
+        let scoreCell = row.insertCell();
+        let timeCell = row.insertCell();
+        let dateCell = row.insertCell();
+
+        positionCell.appendChild(document.createTextNode(position))
+        nickCell.appendChild(document.createTextNode(score.nick))
+        dateCell.appendChild(document.createTextNode(score.date.toLocaleDateString("en-US")))
+        scoreCell.appendChild(document.createTextNode(score.score))
+        timeCell.appendChild(document.createTextNode(score.time))
+    }
+
+    clearTable() {
+        let oldBody = this.table.getElementsByTagName('tbody')[0];
+        let newBody = document.createElement('tbody');
+        this.table.replaceChild(newBody, oldBody);
+    }
+
+    refreshTable() {
+        let transactoin = this.db.transaction(["Ranking"], "readwrite");
+        let ranking = transactoin.objectStore("Ranking");
+
+        let request = ranking.getAll();
+        request.onsuccess = () => this.setTableContent(request.result);
+    }
+
+    addRecord(record) {
+        let request = this.db.transaction(["Ranking"], "readwrite")
+        .objectStore("Ranking")
+        .put(record);
+        
+        request.onsuccess = () => {
+            // alert("Record added");
+            this.refreshTable();
+        };
+    }
+}
+
+
 class Game {
 
     constructor() {
         this.screen = new Screen(800, 500);
         this.keyboard = new Keyboard();
+        this.ranking = new Ranking();
         this.paused = true;
         this.verticalEnabled = true;
         
@@ -248,7 +323,7 @@ class Game {
         this.horizontalPlatform.update(millis);
         if(this.verticalEnabled) this.verticalPlatform.update(millis);
 
-        if(this.balls.length == 0) this.initLevel();
+        if(this.balls.length == 0) this.finishGame();
     }
 
     draw(ctx) {
@@ -280,6 +355,8 @@ class Game {
         this.interval = setInterval(this.loop.bind(this, millis), millis);
         this.setPauseButtonText("Pause");
         this.paused = false;
+        this.ranking.clearTable();
+        this.ranking.insertTableRow('position', 'date', 'score', 'time');
     }
 
     stop() {
@@ -322,9 +399,26 @@ class Game {
 
     initLevel() {
         this.reset();
-        this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6));
+        // this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6));
         this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3));
         this.addBlocks();
+    }
+
+    finishGame() {
+        const record = {
+            nick: this.getNick(),
+            date: new Date(),
+            score: this.score,
+            time: Math.floor((new Date().getTime() - this.startTime.getTime()) / 1000),
+        }
+        this.ranking.addRecord(record);
+        this.initLevel();
+    }
+
+    getNick() {
+        var nick = document.getElementById("nick-field").value;
+        if(nick.length == 0) nick="Unknown";
+        return nick;
     }
 
     addBlocks() {
