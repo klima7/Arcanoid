@@ -90,9 +90,13 @@ class Ball extends Collideable {
         this.speed = speed;
         this.vx = speed * Math.sin(angle);
         this.vy = speed * Math.cos(angle);
+        this.isSticked = false;
     }
 
     update(millis) {
+        if(this.isSticked) 
+            return;
+
         let collideables = [this.game.horizontalPlatform]
         if(this.game.verticalEnabled) collideables.push(this.game.verticalPlatform);
         collideables = collideables.concat(this.game.blocks)
@@ -123,6 +127,12 @@ class Ball extends Collideable {
 
                 let shift = ((this.x + this.width/2) - (collideable.x + collideable.width/2)) / (collideable.width/2);
                 this.setVelocityX(shift*Ball.BOUNCE_FACTOR);
+
+                if(collideable instanceof Platform && this.game.pendingStick != 0) {
+                    this.isSticked = true;
+                    collideable.stickedBalls.push(this);
+                    this.game.pendingStick -= 1;
+                }
             }
         }
 
@@ -168,14 +178,29 @@ class Platform extends Collideable {
         this.orientation = orientation;
         this.firstKey = firstKey;
         this.secondKey = secondKey;
+        this.stickedBalls = [];
     }
 
     update(millis) {
+        let oldX = this.x;
+        let oldY = this.y;
+
         let keyboard = this.game.keyboard;
         if(this.orientation == 'horizontal' && keyboard.isPressed(this.firstKey)) this.moveLeft(millis);
         if(this.orientation == 'horizontal' && keyboard.isPressed(this.secondKey)) this.moveRight(millis);
         if(this.orientation == 'vertical' && keyboard.isPressed(this.firstKey)) this.moveDown(millis);
         if(this.orientation == 'vertical' && keyboard.isPressed(this.secondKey)) this.moveUp(millis);
+        if(keyboard.isPressed("KeyS")) this.fire();
+
+        let changeX = this.x - oldX;
+        let changeY = this.y - oldY;
+
+        this.moveStickedBalls(changeX, changeY);
+    }
+
+    fire() {
+        this.stickedBalls.forEach(ball => ball.isSticked = false);
+        this.stickedBalls = [];
     }
 
     moveLeft(millis) {
@@ -191,6 +216,7 @@ class Platform extends Collideable {
     }
 
     moveRight(millis) {
+        let oldX = this.x;
         this.x += Platform.SPEED * millis / 1000;
         if(this.x + Platform.WIDTH > this.game.screen.width) this.x = this.game.screen.width - Platform.WIDTH;
 
@@ -224,6 +250,13 @@ class Platform extends Collideable {
                 ball.vy = Platform.SPEED;
             }
         }
+    }
+
+    moveStickedBalls(x, y) {
+        this.stickedBalls.forEach(ball => {
+            ball.x += x;
+            ball.y += y;
+        })
     }
 
     draw(ctx) {
@@ -330,6 +363,61 @@ class Ranking {
 }
 
 
+class Boost extends Collideable {
+
+    static VELOCITY = 100;
+    static RADIUS = 10;
+
+    constructor(game, x, y, color, name) {
+        super(x-Boost.RADIUS, y-Boost.RADIUS, 2*Boost.RADIUS, 2*Boost.RADIUS)
+        this.game = game;
+        this.points = Block.POINTS;
+        this.color = color;
+        this.name = name;
+    }
+
+    update(millis) {
+        this.y += Boost.VELOCITY * millis / 1000;
+
+        let platforms = [this.game.verticalPlatform, this.game.horizontalPlatform];
+        platforms.forEach(platform => {
+            if(this.collide(platform)) {
+                this.action();
+                const index = this.game.boosts.indexOf(this);
+                this.game.boosts.splice(index, 1);
+            }
+        });
+    }
+
+    draw(ctx) {
+        ctx.beginPath();
+        ctx.arc(this.x + Boost.RADIUS, this.y + Boost.RADIUS, Boost.RADIUS, 0, 2*Math.PI);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+
+        ctx.font = "13px Comic Sans MS";
+        ctx.fillStyle = "black";
+        ctx.fillText(this.name, this.x + Boost.RADIUS*2 + 5, this.y+15);
+    }
+
+    action() {}
+}
+
+
+class StickBoost extends Boost {
+
+    static COLOR = 'pink';
+
+    constructor(game, x, y) {
+        super(game, x, y, StickBoost.COLOR, 'Sticky');
+    }
+
+    action() {
+        this.game.pendingStick += 1;
+    }
+}
+
+
 class Game {
 
     constructor() {
@@ -351,6 +439,7 @@ class Game {
 
     update(millis) {
         this.balls.forEach(ball => ball.update(millis));
+        this.boosts.forEach(boost => boost.update(millis));
         this.horizontalPlatform.update(millis);
         if(this.verticalEnabled) this.verticalPlatform.update(millis);
 
@@ -362,6 +451,7 @@ class Game {
         this.horizontalPlatform.draw(ctx);
         if(this.verticalEnabled) this.verticalPlatform.draw(ctx);
         this.blocks.forEach(block => block.draw(ctx));
+        this.boosts.forEach(boost => boost.draw(ctx));
         this.drawScore(ctx);
         this.drawTime(ctx);
     }
@@ -421,7 +511,9 @@ class Game {
     reset() {
         this.balls = [];
         this.blocks = [];
+        this.boosts = [new StickBoost(this, 200, 200)];
         this.score = 0;
+        this.pendingStick = 0;
         this.verticalPlatform = new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp")
         this.horizontalPlatform = new Platform(this, 400, 480, "horizontal", "ArrowLeft", "ArrowRight")
         this.startTime = new Date();
