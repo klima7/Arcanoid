@@ -14,9 +14,9 @@ canvas {
     text-align: center;
 }
 
-.buttons {
+#buttons {
     text-align: center;
-    margin: 5px;
+    margin: auto;
 }
 
 .button {
@@ -30,3 +30,12 @@ canvas {
 .button:hover {
     background-color: greenyellow;
 }
+
+.red {
+    border-color: red;
+}
+
+.red:hover {
+    background-color: lightcoral;
+}
+

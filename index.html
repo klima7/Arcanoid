@@ -6,16 +6,24 @@
 </head>
 <body onload="startGame()">
     <div id="game"></div>
-    <div class="buttons">
-        <button type="button" class="button" onmousedown="push('ArrowUp')" onmouseup="release('ArrowUp')">Up</button>
-    </div>
-    <div class="buttons">
-        <button type="button" class="button" onmousedown="push('ArrowLeft')" onmouseup="release('ArrowLeft')">Left</button>
-        <button type="button" class="button pause" onclick="game.switchPaused()">Pause</button>
-        <button type="button" class="button" onmousedown="push('ArrowRight')" onmouseup="release('ArrowRight')">Right</button>
-    </div>
-    <div class="buttons">
-        <button type="button" class="button" onmousedown="push('ArrowDown')" onmouseup="release('ArrowDown')">Down</button>
+    <div>
+    <table id="buttons">
+        <tr>
+            <td><button type="button" class="button red" onmousedown="push('ArrowDown')" onmouseup="release('ArrowDown')">Vertical</button></td>
+            <td><button type="button" class="button" onmousedown="push('ArrowUp')" onmouseup="release('ArrowUp')">Up</button></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td><button type="button" class="button" onmousedown="push('ArrowLeft')" onmouseup="release('ArrowLeft')">Left</button></td>
+            <td><button type="button" class="button" onclick="game.switchPaused()">Pause</button></td>
+            <td><button type="button" class="button" onmousedown="push('ArrowRight')" onmouseup="release('ArrowRight')">Right</button></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><button type="button" class="button" onmousedown="push('ArrowDown')" onmouseup="release('ArrowDown')">Down</button></td>
+            <td></td>
+        </tr>
+    </table>
     </div>
 </body>
 </html>

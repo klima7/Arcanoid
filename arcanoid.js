@@ -228,6 +228,7 @@ class Game {
         this.screen = new Screen(800, 600);
         this.keyboard = new Keyboard();
         this.paused = true;
+        this.verticalPlatform = true;
 
         this.initLevel();
     }
