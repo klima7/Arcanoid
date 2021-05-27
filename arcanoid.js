@@ -81,7 +81,9 @@ class Ball extends Collideable {
     }
 
     update(millis) {
-        let collideables = this.game.platforms.concat(this.game.blocks)
+        let collideables = [this.game.horizontalPlatform]
+        if(this.game.verticalEnabled) collideables.push(this.game.verticalPlatform);
+        collideables = collideables.concat(this.game.blocks)
 
         this.x += this.vx * millis / 1000;
         for(let collideable of collideables) {
@@ -108,6 +110,8 @@ class Ball extends Collideable {
 
         if(this.x > this.game.screen.width - this.width) this.vx *= -1;
         if(this.y < 0) this.vy *= -1;
+        if(!this.game.verticalEnabled && this.x < 0) this.vx *= -1;
+
         if(this.x < -this.width || this.y > this.game.screen.height) {
             const index = this.game.balls.indexOf(this);
             this.game.balls.splice(index, 1)
@@ -224,12 +228,12 @@ class Block extends Collideable {
 class Game {
 
     constructor() {
-        this.screen = new Screen(800, 600);
+        this.screen = new Screen(800, 500);
         this.keyboard = new Keyboard();
         this.paused = true;
-        this.verticalPlatform = true;
+        this.verticalEnabled = true;
         
-        this.reset();
+        this.setVerticalPlatform(this.verticalEnabled);
         this.initLevel();
     }
 
@@ -241,14 +245,16 @@ class Game {
 
     update(millis) {
         this.balls.forEach(ball => ball.update(millis));
-        this.platforms.forEach(platform => platform.update(millis));
+        this.horizontalPlatform.update(millis);
+        if(this.verticalEnabled) this.verticalPlatform.update(millis);
 
         if(this.balls.length == 0) this.initLevel();
     }
 
     draw(ctx) {
         this.balls.forEach(ball => ball.draw(ctx));
-        this.platforms.forEach(platform => platform.draw(ctx));
+        this.horizontalPlatform.draw(ctx);
+        if(this.verticalEnabled) this.verticalPlatform.draw(ctx);
         this.blocks.forEach(block => block.draw(ctx));
         this.drawScore(ctx);
         this.drawTime(ctx);
@@ -294,11 +300,23 @@ class Game {
         else this.stop();
     }
 
+    setVerticalPlatform(enabled) {
+        this.verticalEnabled = enabled;
+        const button = document.getElementById("vertical-platform-button");
+        if(enabled) button.classList.add("selected");
+        else button.classList.remove("selected");
+    }
+
+    switchVerticalPlatform() {
+        this.setVerticalPlatform(!this.verticalEnabled);
+    }
+
     reset() {
         this.balls = [];
-        this.platforms = [];
         this.blocks = [];
         this.score = 0;
+        this.verticalPlatform = new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp")
+        this.horizontalPlatform = new Platform(this, 400, 480, "horizontal", "ArrowLeft", "ArrowRight")
         this.startTime = new Date();
     }
 
@@ -306,8 +324,6 @@ class Game {
         this.reset();
         this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6));
         this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3));
-        this.platforms.push(new Platform(this, 400, 580, "horizontal", "ArrowLeft", "ArrowRight"));
-        this.platforms.push(new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp"));
         this.addBlocks();
     }
 
