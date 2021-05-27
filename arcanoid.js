@@ -265,7 +265,6 @@ class Platform extends Collideable {
     }
 }
 
-
 class Block extends Collideable {
 
     static POINTS = 10;
@@ -348,11 +347,24 @@ class Ranking {
         let timeCell = row.insertCell();
         let dateCell = row.insertCell();
 
+        let minutes = String(Math.floor(score.time/60)).padStart(2, '0');
+        let seconds = String(score.time%60).padStart(2, '0');
+        let timeText = minutes + ":" + seconds;
+
+        let d = score.date;
+        let time = new Date,
+    format = [d.getMonth()+1,
+               d.getDate(),
+               d.getFullYear()].join('/')+' '+
+              [d.getHours(),
+               d.getMinutes(),
+               d.getSeconds()].join(':');
+
         positionCell.appendChild(document.createTextNode(position))
         nickCell.appendChild(document.createTextNode(score.nick))
-        dateCell.appendChild(document.createTextNode(score.date.toLocaleDateString("en-US")))
+        dateCell.appendChild(document.createTextNode(format))
         scoreCell.appendChild(document.createTextNode(score.score))
-        timeCell.appendChild(document.createTextNode(score.time))
+        timeCell.appendChild(document.createTextNode(timeText))
     }
 
     clearTable() {
@@ -516,7 +528,7 @@ class Game {
     }
 
     drawTime(ctx) {
-        const elapsedSeconds = (new Date().getTime() - this.startTime.getTime()) / 1000;
+        const elapsedSeconds = this.getTime() / 1000;
         const minutes = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
         const seconds = String(Math.floor(elapsedSeconds % 60)).padStart(2, '0');
         const text = "Time: " + minutes + ":" + seconds;
@@ -525,14 +537,20 @@ class Game {
         ctx.fillText(text, this.screen.width-120, 25);
     }
 
+    getTime() {
+        return this.gameTime + new Date().getTime() - this.startTime.getTime();
+    }
+
     start(millis) {
         this.interval = setInterval(this.loop.bind(this, millis), millis);
         this.setPauseButtonText("Pause");
         this.paused = false;
         this.ranking.clearTable();
+        this.startTime = new Date();
     }
 
     stop() {
+        this.gameTime += new Date().getTime() - this.startTime.getTime();
         clearInterval(this.interval);
         this.setPauseButtonText("Resume");
         this.paused = true;
@@ -570,11 +588,11 @@ class Game {
         this.verticalPlatform = new Platform(this, 20, 300, "vertical", "ArrowDown", "ArrowUp")
         this.horizontalPlatform = new Platform(this, 400, 480, "horizontal", "ArrowLeft", "ArrowRight")
         this.startTime = new Date();
+        this.gameTime = 0;
     }
 
     initLevel() {
         this.reset();
-        // this.balls.push(new Ball(this, 400, 100, 100, Math.PI/6));
         this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3));
         this.addBlocks();
     }
@@ -584,7 +602,7 @@ class Game {
             nick: this.getNick(),
             date: new Date(),
             score: this.score,
-            time: Math.floor((new Date().getTime() - this.startTime.getTime()) / 1000),
+            time: Math.floor(this.getTime() / 1000),
         }
         this.ranking.addRecord(record);
         this.initLevel();
