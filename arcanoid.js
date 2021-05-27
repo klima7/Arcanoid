@@ -89,10 +89,8 @@ class Ball extends Collideable {
                 if(this.vx > 0) this.x = collideable.x - this.width;
                 else this.x = collideable.x + collideable.width;
                 this.vx *= -1;
-                if(collideable instanceof Block) {
-                    const index = this.game.blocks.indexOf(collideable);
-                    this.game.blocks.splice(index, 1)
-                }
+                if(collideable instanceof Block)
+                    this.game.hitBlock(collideable);
             }
         }
 
@@ -103,10 +101,8 @@ class Ball extends Collideable {
                 if(this.vy > 0) this.y = collideable.y - this.height;
                 else this.y = collideable.y + collideable.height;
                 this.vy *= -1;
-                if(collideable instanceof Block) {
-                    const index = this.game.blocks.indexOf(collideable);
-                    this.game.blocks.splice(index, 1)
-                }
+                if(collideable instanceof Block)
+                    this.game.hitBlock(collideable);
             }
         }
 
@@ -206,6 +202,8 @@ class Platform extends Collideable {
 
 
 class Block extends Collideable {
+
+    static POINTS = 10;
     static WIDTH = 40
     static HEIGHT = 20
     static COLOR = 'blue'
@@ -213,6 +211,7 @@ class Block extends Collideable {
     constructor(game, x, y) {
         super(x, y, Block.WIDTH, Block.HEIGHT)
         this.game = game;
+        this.points = Block.POINTS;
     }
 
     draw(ctx) {
@@ -229,6 +228,7 @@ class Game {
         this.keyboard = new Keyboard();
         this.paused = true;
         this.verticalPlatform = true;
+        this.score = 0;
 
         this.initLevel();
     }
@@ -250,6 +250,13 @@ class Game {
         this.balls.forEach(ball => ball.draw(ctx));
         this.platforms.forEach(platform => platform.draw(ctx));
         this.blocks.forEach(block => block.draw(ctx));
+        this.drawScore(ctx);
+    }
+
+    drawScore(ctx) {
+        ctx.font = "20px Comic Sans MS";
+        ctx.fillStyle = "red";
+        ctx.fillText("Score: " + this.score, 10, 25);
     }
 
     start(millis) {
@@ -280,6 +287,7 @@ class Game {
         this.balls = [];
         this.platforms = [];
         this.blocks = [];
+        this.score = 0;
     }
 
     initLevel() {
@@ -300,5 +308,11 @@ class Game {
                 this.blocks.push(block);
             }
         }
+    }
+
+    hitBlock(block) {
+        const index = this.blocks.indexOf(block);
+        this.blocks.splice(index, 1);
+        this.score += block.points;
     }
 }
