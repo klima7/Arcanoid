@@ -14,7 +14,7 @@
         <tr>
             <td><button type="button" id ="vertical-platform-button" class="button vertical" onclick="game.switchVerticalPlatform()">Vertical</button></td>
             <td><button type="button" class="button move" onmousedown="push('ArrowUp')" onmouseup="release('ArrowUp')">Up</button></td>
-            <td></td>
+            <td><button type="button" class="button fire" onclick="game.horizontalPlatform.fire()">Fire</button></td>
         </tr>
         <tr>
             <td><button type="button" class="button move" onmousedown="push('ArrowLeft')" onmouseup="release('ArrowLeft')">Left</button></td>
@@ -24,7 +24,7 @@
         <tr>
             <td></td>
             <td><button type="button" class="button move" onmousedown="push('ArrowDown')" onmouseup="release('ArrowDown')">Down</button></td>
-            <td></td>
+            <td><button type="button" class="button fire" onclick="game.reset()">Reset</button></td>
         </tr>
     </table>
 

@@ -493,7 +493,7 @@ class Game {
         this.verticalEnabled = true;
         
         this.setVerticalPlatform(this.verticalEnabled);
-        this.initLevel();
+        this.reset();
     }
 
     loop(millis) {
@@ -589,11 +589,10 @@ class Game {
         this.horizontalPlatform = new Platform(this, 400, 480, "horizontal", "ArrowLeft", "ArrowRight")
         this.startTime = new Date();
         this.gameTime = 0;
-    }
-
-    initLevel() {
-        this.reset();
-        this.balls.push(new Ball(this, 200, 200, 150, Math.PI/3));
+        let ball = new Ball(this, 400, 465, 150, Math.PI/3);
+        ball.isSticked = true;
+        this.horizontalPlatform.stickedBalls.push(ball);
+        this.balls.push(ball);
         this.addBlocks();
     }
 
@@ -605,7 +604,7 @@ class Game {
             time: Math.floor(this.getTime() / 1000),
         }
         this.ranking.addRecord(record);
-        this.initLevel();
+        this.reset();
     }
 
     getNick() {

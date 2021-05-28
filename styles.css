@@ -92,3 +92,11 @@ input {
     border-color: red;
     background-color: red;
 }
+
+.button.fire {
+    border-color: red;
+}
+
+.button.fire:hover {
+    background-color: lightcoral;
+}
